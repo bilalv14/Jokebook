@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jokebook</title>
+    <style>
+        .error-message {
+            color: red;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome to the Jokebook</h1>
+
+    <h2>Categories</h2>
+    <ul id="categories"></ul>
+
+    <h2>Jokes</h2>
+    <ul id="jokes"></ul>
+
+    <!-- Adds a new joke -->
+    <h2>Add a New Joke</h2>
+    <form id="jokeForm" action="/jokebook/joke/add" method="POST" onsubmit="return validateForm()">
+        <label for="category">Category:</label>
+        <select id="category" name="category" required>
+            <option value="">Select a category</option>
+        </select>
+
+        <label for="setup">Setup:</label>
+        <input type="text" id="setup" name="setup" required>
+
+        <label for="delivery">Delivery:</label>
+        <input type="text" id="delivery" name="delivery" required>
+
+        <button type="submit">Add Joke</button>
+        <p class="error-message" id="errorMessage">Please fill out all fields before submitting.</p>
+    </form>
+
+    <script>
+        // Gets categories
+        fetch('/jokebook/categories')
+            .then(response => response.json())
+            .then(categories => {
+                const categoryList = document.getElementById('categories');
+                const categoryDropdown = document.getElementById('category');
+
+                categories.forEach(category => {
+                    // shows jokes in db
+                    const li = document.createElement('li');
+                    li.textContent = category;
+                    li.addEventListener('click', () => loadJokes(category));
+                    categoryList.appendChild(li);
+
+                    const option = document.createElement('option');
+                    option.value = category;
+                    option.textContent = category;
+                    categoryDropdown.appendChild(option);
+                });
+            });
+
+        // Function that loads jokes from a specific category
+        function loadJokes(category) {
+            fetch(`/jokebook/joke/${category}`)
+                .then(response => response.json())
+                .then(jokes => {
+                    const jokeList = document.getElementById('jokes');
+                    jokeList.innerHTML = ''; // Clear previous jokes
+                    jokes.forEach(joke => {
+                        const li = document.createElement('li');
+                        li.textContent = `${joke.setup} - ${joke.delivery}`;
+                        jokeList.appendChild(li);
+                    });
+                });
+        }
+
+        // error handling
+        function validateForm() {
+            const category = document.getElementById('category').value;
+            const setup = document.getElementById('setup').value.trim();
+            const delivery = document.getElementById('delivery').value.trim();
+            const errorMessage = document.getElementById('errorMessage');
+
+            if (!category || !setup || !delivery) {
+                errorMessage.style.display = 'block';
+                return false;
+            }
+
+            errorMessage.style.display = 'none';
+            return true;
+        }
+    </script>
+</body>
+</html>
+
